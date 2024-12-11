@@ -1,1 +1,2 @@
 # PerformativCalculator
+.venv
