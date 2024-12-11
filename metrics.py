@@ -73,8 +73,7 @@ def calculate_price(positions, fx_rates, prices, start_date, end_date, target_cu
     date_range = [(start + timedelta(days=i)).date() for i in range((end - start).days + 1)]
 
     # Initialize results
-    position_prices = {}
-    basket_prices = [0.0] * len(date_range)
+    position_prices = {}    
 
     # Calculate Price for each position
     for position in positions:
@@ -106,23 +105,48 @@ def calculate_price(positions, fx_rates, prices, start_date, end_date, target_cu
             )  # Default to 1.0 if the date is missing
                 price_tc = price_lc * fx_rate
             
-            pos_prices.append(price_tc)
-
-            # Update basket-level Price
-            basket_prices[t] += price_tc
+            pos_prices.append(price_tc)            
 
         position_prices[position.id] = pos_prices
 
     # Build the result
     return {
-        "positions": position_prices,
-        "basket": basket_prices,
-        "dates": [str(d) for d in date_range],
+        "positions": position_prices,        
     }
 
 
 
 
+
+# def calculate_metrics(positions, fx_rates, prices, start_date, end_date, target_currency):
+#     """
+#     Main function to calculate all required financial metrics.
+    
+#     Args:
+#         positions (list): List of positions.
+#         fx_rates (dict): FX rates data.
+#         prices (dict): Prices data.
+#         start_date (str): Start date.
+#         end_date (str): End date.
+#         target_currency (str): Target currency.
+
+#     Returns:
+#         dict: The calculated metrics for positions and the basket.
+#     """
+#     results = {}
+
+#     # Calculate IsOpen metric
+#     is_open = calculate_is_open(positions, start_date, end_date)
+#     results["IsOpen"] = is_open
+
+#     # Calculate Price metric
+#     price = calculate_price(positions, fx_rates, prices, start_date, end_date, target_currency)
+#     results["Price"] = price
+
+#     # Placeholder for other metrics
+#     # e.g., Price, Value, ReturnPerPeriod, ReturnPerPeriodPercentage
+    
+#     return results
 
 def calculate_metrics(positions, fx_rates, prices, start_date, end_date, target_currency):
     """
@@ -139,17 +163,53 @@ def calculate_metrics(positions, fx_rates, prices, start_date, end_date, target_
     Returns:
         dict: The calculated metrics for positions and the basket.
     """
-    results = {}
+    # Initialize results
+    results = {
+        "positions": {},
+        "basket": {},
+        "dates": []
+    }
 
     # Calculate IsOpen metric
     is_open = calculate_is_open(positions, start_date, end_date)
-    results["IsOpen"] = is_open
+    dates = is_open["dates"]  # Get the list of dates
+    results["dates"] = dates
 
-    # Calculate Price metric
-    price = calculate_price(positions, fx_rates, prices, start_date, end_date, target_currency)
-    results["Price"] = price
+    # Initialize basket metrics
+    basket_metrics = {
+        "IsOpen": is_open["basket"],
+        "Price": [0.0] * len(dates), # Basket price should always be 0
+        "Value": [0.0] * len(dates),
+        "ReturnPerPeriod": [0.0] * len(dates),
+        "ReturnPerPeriodPercentage": [0.0] * len(dates)
+    }
 
-    # Placeholder for other metrics
-    # e.g., Price, Value, ReturnPerPeriod, ReturnPerPeriodPercentage
-    
+    # Loop through positions and calculate metrics
+    for position in positions:
+        position_id = position.id
+        instrument_id = position.instrument_id
+        instrument_currency = position.instrument_currency
+
+        # Calculate metrics for the position
+        position_metrics = {
+            "IsOpen": is_open["positions"][position_id],
+            "Price": calculate_price([position], fx_rates, prices, start_date, end_date, target_currency)["positions"][position_id],
+            "Value": [0.0] * len(dates),  # Placeholder: implement Value calculation
+            "ReturnPerPeriod": [0.0] * len(dates),  # Placeholder: implement ReturnPerPeriod
+            "ReturnPerPeriodPercentage": [0.0] * len(dates)  # Placeholder: implement ReturnPerPeriodPercentage
+        }
+
+        # Add position metrics to results
+        results["positions"][position_id] = position_metrics
+
+        # Update basket metrics
+        for metric in ["Value", "ReturnPerPeriod", "ReturnPerPeriodPercentage"]:
+            basket_metrics[metric] = [
+                basket + position for basket, position in zip(basket_metrics[metric], position_metrics[metric])
+            ]
+
+    # Add basket metrics to results
+    results["basket"] = basket_metrics
+
     return results
+
