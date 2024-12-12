@@ -54,3 +54,28 @@ def get_prices(positions, start_date, end_date):
         prices[pos.id] = response.json()
     return prices
 
+# Function to submit metrics to the API
+def submit_metrics(metrics):
+    """
+    Submit the calculated metrics to the API submission endpoint.
+
+    Args:
+        metrics (dict): The dictionary containing the metrics (positions, basket, dates).
+        submission_url (str): The URL of the submission endpoint.
+        api_key (str): The API key for authentication.
+
+    Returns:
+        dict: The response from the API submission.
+    """
+    url = f"{BASE_URL}/submit"
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(url, headers=headers, json=metrics)
+
+    # Raise an exception for HTTP errors
+    response.raise_for_status()
+
+    return response.json()

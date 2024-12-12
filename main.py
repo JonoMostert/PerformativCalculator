@@ -4,7 +4,8 @@ from typing import List, Optional
 import json
 from pathlib import Path
 from metrics import calculate_metrics
-from utils import get_fx_rates, get_prices
+from utils import get_fx_rates, get_prices, submit_metrics
+import requests
 
 # Set inputs from challenge
 START_DATE = "2023-01-01"
@@ -34,23 +35,23 @@ class Position(BaseModel):
 # Initialize FastAPI
 app = FastAPI()
 
-@app.get("/test-fxrates")
-def test_api(positions: List[Position] = Depends(load_positions),
-    target_currency: str = TARGET_CURRENCY,
-    start_date: str = START_DATE,
-    end_date: str = END_DATE
-):
-    parsed_positions = [Position(**pos) for pos in positions]
-    return get_fx_rates(parsed_positions, start_date, end_date, target_currency)
+# @app.get("/test-fxrates")
+# def test_api(positions: List[Position] = Depends(load_positions),
+#     target_currency: str = TARGET_CURRENCY,
+#     start_date: str = START_DATE,
+#     end_date: str = END_DATE
+# ):
+#     parsed_positions = [Position(**pos) for pos in positions]
+#     return get_fx_rates(parsed_positions, start_date, end_date, target_currency)
 
-@app.get("/test-prices")
-def test_api(positions: List[Position] = Depends(load_positions),
-    target_currency: str = TARGET_CURRENCY,
-    start_date: str = START_DATE,
-    end_date: str = END_DATE
-):
-    parsed_positions = [Position(**pos) for pos in positions]
-    return get_prices(parsed_positions, start_date, end_date)
+# @app.get("/test-prices")
+# def test_api(positions: List[Position] = Depends(load_positions),
+#     target_currency: str = TARGET_CURRENCY,
+#     start_date: str = START_DATE,
+#     end_date: str = END_DATE
+# ):
+#     parsed_positions = [Position(**pos) for pos in positions]
+#     return get_prices(parsed_positions, start_date, end_date)
 
 # Calculate endpoint
 @app.post("/calculate")
@@ -68,5 +69,16 @@ async def calculate(
     prices = get_prices(parsed_positions, start_date, end_date)
     
     # Calculate metrics
-    result = calculate_metrics(parsed_positions, fx_rates, prices, start_date, end_date, target_currency)
-    return result
+    metrics = calculate_metrics(parsed_positions, fx_rates, prices, start_date, end_date, target_currency)
+    # Submit metrics to the API
+
+    submission_data = {
+        "positions": metrics["positions"],
+        "basket": metrics["basket"],
+        "dates": metrics["dates"]
+    }
+    try:
+        submission_response = submit_metrics(submission_data)
+        return {"status": "success", "submission_response": submission_response}
+    except requests.exceptions.RequestException as e:
+        return {"status": "error", "message": str(e)}
