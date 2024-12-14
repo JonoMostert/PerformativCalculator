@@ -5,9 +5,8 @@ def calculate_is_open(positions, date_range):
     Calculate the `IsOpen` metric for each position and at the basket level.
     
     Args:
-        positions (list): List of positions (dictionaries or Pydantic models).
-        start_date (str): Start date in "YYYY-MM-DD" format.
-        end_date (str): End date in "YYYY-MM-DD" format.
+        positions (list): List of positions (dictionaries).
+        date_range (list): List of dates in the range.
 
     Returns:
         dict: A dictionary containing `IsOpen` values for each position and the basket.
@@ -15,7 +14,7 @@ def calculate_is_open(positions, date_range):
 
     # Initialize results
     position_is_open = {}
-    basket_is_open = [0] * len(date_range)
+    basket_is_open = [0.0] * len(date_range)
 
     # Calculate IsOpen for each position
     for position in positions:
@@ -29,14 +28,14 @@ def calculate_is_open(positions, date_range):
         # This checks the current date itteration and assigns 1 for open or 0 for closed
         for current_date in date_range:
             if close_date:
-                is_open = 1 if open_date <= current_date < close_date else 0
+                is_open = 1.0 if open_date <= current_date < close_date else 0.0
             else:
-                is_open = 1 if open_date <= current_date else 0
+                is_open = 1.0 if open_date <= current_date else 0.0
             pos_is_open.append(is_open)
 
         position_is_open[position.id] = pos_is_open
         
-        # Update basket-level IsOpen (this will check each current data value for the current position vs any position in basket)
+        # Update basket-level IsOpen (this will check each current date value for the current position vs any position in basket)
         basket_is_open = [
             max(basket, pos) for basket, pos in zip(basket_is_open, pos_is_open)
         ]
@@ -52,11 +51,11 @@ def calculate_price(positions, fx_rates, prices, date_range, target_currency):
     Calculate the `Price` metric for each position. Basket will alays be 0
 
     Args:
-        positions (list): List of positions (dictionaries or Pydantic models).
+        positions (list): List of positions (dictionaries).
         fx_rates (dict): Forex rates data with dates as keys.
         prices (dict): Local currency prices data with instrument IDs as keys.
-        start_date (str): Start date in "YYYY-MM-DD" format.
-        end_date (str): End date in "YYYY-MM-DD" format.
+        date_range (list): List of dates in the range.
+        target_currency (str): The target currency.
 
     Returns:
         dict: A dictionary containing `Price` values for each position and the basket.
@@ -128,7 +127,7 @@ def calculate_quantity(positions, date_range, is_open):
 
     # Initialize results
     position_quant = {}
-    basket_quant = [0] * len(date_range)
+    basket_quant = [0.0] * len(date_range)
 
     for position in positions:        
         quantity = position.quantity
@@ -165,7 +164,7 @@ def calculate_value(positions, price, quantity, date_range):
     
     # Initialize results
     position_value = {}
-    basket_value = [0] * len(date_range)    
+    basket_value = [0.0] * len(date_range)    
 
     # Value_tc = Price_tc * Quantity_i,t
     for position in positions:
@@ -184,6 +183,8 @@ def calculate_value(positions, price, quantity, date_range):
         for t, pos_value in enumerate(value_list):
             basket_value[t] += pos_value
 
+        basket_value = [basket for basket in basket_value]
+
 
     return {
         "positions": position_value,
@@ -196,7 +197,9 @@ def calculate_open_price(positions, date_range, fx_rates, target_currency):
 
     Args:
         positions (list): List of positions.
+        date_range (list): List of dates in the range.
         fx_rates (dict): Forex rates data with dates as keys.
+        target_currency (str): The target currency.
 
     Returns:
         dict: A dictionary containing OpenPrice for each position and the basket.
@@ -239,13 +242,15 @@ def calculate_closed_price(positions, fx_rates, date_range, target_currency):
     Args:
         positions (list): List of positions.
         fx_rates (dict): Forex rates data with dates as keys.
+        date_range (list): List of dates in the range.
+        target_currency (str): The target currency.
 
     Returns:
         dict: A dictionary containing ClosedPrice for each position and the basket.
     """
     # Initialize results
     position_closed_price = {}
-    basket_closed_price = [0] * len(date_range)
+    basket_closed_price = [0.0] * len(date_range)
 
     for position in positions:
         position_id = position.id
@@ -282,8 +287,8 @@ def calculate_open_value(positions, date_range, openPrice_dict):
     Args:
         positions (list): List of positions.
         date_range (list): List of dates in the range.
-        fx_rates (dict): Forex rates data.
-        target_currency (str): The target currency.
+        openPrice_dict (dict): OpenPrice metric for each position.
+        
 
     Returns:
         dict: A dictionary containing OpenValue for each position and the basket.
@@ -329,8 +334,7 @@ def calculate_close_value(positions, date_range, closePrice_dict):
     Args:
         positions (list): List of positions.
         date_range (list): List of dates in the range.
-        fx_rates (dict): Forex rates data.
-        target_currency (str): The target currency.
+        closePrice_dict (dict): ClosePrice metric for each position.
 
     Returns:
         dict: A dictionary containing CloseValue for each position and the basket.
@@ -380,10 +384,9 @@ def calculate_ReturnPerPeriod(positions, date_range, openValue_dict, closeValue_
     Args:
         positions (list): List of positions.
         date_range (list): List of dates in the range.
-        fx_rates (dict): Forex rates data.
-        target_currency (str): The target currency.
-        price (dict): Price metric for each position.
-        quantity (dict): Quantity metric for each position.
+        openValue_dict (dict): OpenValue metric for each position.
+        closeValue_dict (dict): CloseValue metric for each position.
+        value_dict (dict): Value metric for each position.
 
     Returns:
         dict: A dictionary containing RPP for each position and the basket.
@@ -406,7 +409,7 @@ def calculate_ReturnPerPeriod(positions, date_range, openValue_dict, closeValue_
         for t, current_date in enumerate(date_range):
             # Check is current date < open date, OR if there is a close date assinged AND current date is > close date
             if current_date < position_open_date or (position_close_date and current_date > position_close_date): 
-                RPP = 0.0
+                rpp = 0.0
             else:
                 # Determine ValueTC_Start
                 if current_date == position_open_date:
@@ -422,13 +425,18 @@ def calculate_ReturnPerPeriod(positions, date_range, openValue_dict, closeValue_
                 else:
                     ValueTC_End = value_list[t]
 
-                RPP = ValueTC_End - ValueTC_Start
+                rpp = ValueTC_End - ValueTC_Start
+            # rpp = round_down(rpp,8)
+            # rpp = rpp.quantize(Decimal('1.00000000'), rounding=ROUND_HALF_UP)
+            RPP_list.append(rpp)
 
-            RPP_list.append(RPP)
-
-            basket_RPP[t] += RPP
+            # basket_RPP[t] += rpp
 
         position_RPP[position_id] = RPP_list
+
+        # Update basket value by adding position's value for each date
+        for t, pos_rpp in enumerate(RPP_list):
+            basket_RPP[t] += pos_rpp
 
     return {
         "positions": position_RPP,
@@ -436,6 +444,19 @@ def calculate_ReturnPerPeriod(positions, date_range, openValue_dict, closeValue_
     }
 
 def calculate_ReturnPerPeriodPercentage(positions, date_range, openValue_dict, closeValue_dict, value_dict):
+    """
+    Calculate the `ReturnPerPeriodPercentage` (RPPP) metric for each position and the basket.
+
+    Args:
+        positions (list): List of positions.
+        date_range (list): List of dates in the range.
+        openValue_dict (dict): OpenValue metric for each position.
+        closeValue_dict (dict): CloseValue metric for each position.
+        value_dict (dict): Value metric for each position.
+
+    Returns:
+        dict: A dictionary containing RPPP for each position and the basket.
+    """
 
     # Initialize results
     position_RPPP = {}
@@ -460,6 +481,9 @@ def calculate_ReturnPerPeriodPercentage(positions, date_range, openValue_dict, c
 
             if current_date < position_open_date or (position_close_date and current_date > position_close_date): 
                 rppp = 0.0
+                rpp = 0.0
+                basket_rpp_sums[t] += rpp
+                basket_value_start_sums[t] += 0.0
             else:
                 # Determine ValueTC_Start
                 if current_date == position_open_date:
@@ -488,14 +512,14 @@ def calculate_ReturnPerPeriodPercentage(positions, date_range, openValue_dict, c
                     basket_rpp_sums[t] += rpp
                     basket_value_start_sums[t] += ValueTC_Start
 
-            RPPP_list.append(rppp)
+            RPPP_list.append(round(rppp))
 
         position_RPPP[position_id] = RPPP_list
 
     # Calculate basket-level RPPP for each date
     for t in range(len(date_range)):
         if basket_value_start_sums[t] != 0:
-            basket_RPPP[t] = (basket_rpp_sums[t] / basket_value_start_sums[t]) * 100
+            basket_RPPP[t] = round((basket_rpp_sums[t] / basket_value_start_sums[t]) * 100)
         else:
             basket_RPPP[t] = 0.0
 
@@ -531,7 +555,7 @@ def calculate_metrics(positions, fx_rates, prices, start_date, end_date, target_
     end = datetime.strptime(end_date, "%Y-%m-%d")
     date_range = [(start + timedelta(days=i)).date() for i in range((end - start).days + 1)]
 
-    dates = [str(d) for d in date_range]  # Get the list of dates
+    dates = [str(d) for d in date_range]  # Get the list of dates in string format
     results["dates"] = dates
 
     # Calculate Metrics
@@ -569,13 +593,7 @@ def calculate_metrics(positions, fx_rates, prices, start_date, end_date, target_
         }
 
         # Add position metrics to results
-        results["positions"][position_id] = position_metrics
-
-        # The below line will be removed once we implement the rest of the Metrics
-        # for metric in ["ReturnPerPeriodPercentage"]:
-        #     basket_metrics[metric] = [
-        #         basket + position for basket, position in zip(basket_metrics[metric], position_metrics[metric])
-        #     ]
+        results["positions"][position_id] = position_metrics        
 
     # Add basket metrics to results
     results["basket"] = basket_metrics

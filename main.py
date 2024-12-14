@@ -6,6 +6,7 @@ from pathlib import Path
 from metrics import calculate_metrics
 from utils import get_fx_rates, get_prices, submit_metrics
 import requests
+from decimal import Decimal
 
 # Set inputs from challenge
 START_DATE = "2023-01-01"
@@ -70,6 +71,15 @@ async def calculate(
     
     # Calculate metrics
     metrics = calculate_metrics(parsed_positions, fx_rates, prices, start_date, end_date, target_currency)
+
+    # # Round the metrics for positions and basket
+    # def round_metrics(data):
+    #     if isinstance(data, list):  
+    #         return [round(value, 8) if isinstance(value, (int, float)) else value for value in data]
+    #     elif isinstance(data, dict):  
+    #         return {key: round_metrics(value) for key, value in data.items()}
+    #     return data  
+
     # Submit metrics to the API
 
     submission_data = {
@@ -79,6 +89,6 @@ async def calculate(
     }
     try:
         submission_response = submit_metrics(submission_data)
-        return {"status": "success", "submission_response": submission_response}
+        return {"status": "success", "submission_response": submission_response, "request_body": submission_data}
     except requests.exceptions.RequestException as e:
         return {"status": "error", "message": str(e)}

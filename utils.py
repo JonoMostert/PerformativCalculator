@@ -1,4 +1,6 @@
 import requests
+# import json
+# from decimal import Decimal
 
 BASE_URL = "https://api.challenges.performativ.com"
 API_KEY = "FSPkaSbQA55Do0nXhSZkH9eKWVlAMmNP7OKlI2oA" 
@@ -61,8 +63,7 @@ def submit_metrics(metrics):
 
     Args:
         metrics (dict): The dictionary containing the metrics (positions, basket, dates).
-        submission_url (str): The URL of the submission endpoint.
-        api_key (str): The API key for authentication.
+        
 
     Returns:
         dict: The response from the API submission.
@@ -79,3 +80,28 @@ def submit_metrics(metrics):
     response.raise_for_status()
 
     return response.json()
+
+
+# def submit_metrics(metrics):
+
+#     url = f"{BASE_URL}/submit"
+#     headers = {
+#         "x-api-key": API_KEY,
+#         "Content-Type": "application/json",
+#     }
+
+#     # Custom serializer to convert Decimal to float
+#     def decimal_serializer(obj):
+#         if isinstance(obj, Decimal):
+#             return float(obj)  # Convert Decimal to float
+#         raise TypeError(f"Type {type(obj)} not serializable")
+
+#     # Serialize metrics with the custom serializer
+#     metrics_json = json.dumps(metrics, default=decimal_serializer)
+
+#     response = requests.post(url, headers=headers, data=metrics_json)
+
+#     # Raise an exception for HTTP errors
+#     response.raise_for_status()
+
+#     return response.json()
