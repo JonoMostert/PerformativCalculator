@@ -1,29 +1,8 @@
 import requests
-# import json
-# from decimal import Decimal
+import json
 
 BASE_URL = "https://api.challenges.performativ.com"
 API_KEY = "FSPkaSbQA55Do0nXhSZkH9eKWVlAMmNP7OKlI2oA" 
-
-# def test_api_key():
-#     url = f"{BASE_URL}/fx-rates"
-#     headers = {
-#         "x-api-key": API_KEY,
-#         "Accept": "application/json"
-#     }
-#     params = {
-#         "pairs" : "EURUSD",
-#         "start_date": "20240101",
-#         "end_date": "20240102"
-#     }
-
-#     response = requests.get(url, headers=headers, params=params)
-
-#     if response.status_code == 200:
-#         return {"status": "success", "data": response.json()}
-#     else:
-#         return {"status": "error", "code": response.status_code, "message": response.text}
-
 
 def get_fx_rates(positions, start_date, end_date, target_currency):
 
@@ -72,36 +51,12 @@ def submit_metrics(metrics):
     headers = {
         "x-api-key": API_KEY,
         "Content-Type": "application/json",
-    }
+    }    
 
     response = requests.post(url, headers=headers, json=metrics)
 
-    # Raise an exception for HTTP errors
+    # Raise an exception for HTTP errors (testing submit works)
     response.raise_for_status()
 
     return response.json()
 
-
-# def submit_metrics(metrics):
-
-#     url = f"{BASE_URL}/submit"
-#     headers = {
-#         "x-api-key": API_KEY,
-#         "Content-Type": "application/json",
-#     }
-
-#     # Custom serializer to convert Decimal to float
-#     def decimal_serializer(obj):
-#         if isinstance(obj, Decimal):
-#             return float(obj)  # Convert Decimal to float
-#         raise TypeError(f"Type {type(obj)} not serializable")
-
-#     # Serialize metrics with the custom serializer
-#     metrics_json = json.dumps(metrics, default=decimal_serializer)
-
-#     response = requests.post(url, headers=headers, data=metrics_json)
-
-#     # Raise an exception for HTTP errors
-#     response.raise_for_status()
-
-#     return response.json()

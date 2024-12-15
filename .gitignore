@@ -1,4 +1,10 @@
+# Env file
 .venv
+
+# Some test items
 Untitled-1.ipynb
-/__pycache__
 metrics2.py
+
+# Not needed
+/__pycache__
+*.json

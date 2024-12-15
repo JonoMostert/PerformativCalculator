@@ -36,24 +36,6 @@ class Position(BaseModel):
 # Initialize FastAPI
 app = FastAPI()
 
-# @app.get("/test-fxrates")
-# def test_api(positions: List[Position] = Depends(load_positions),
-#     target_currency: str = TARGET_CURRENCY,
-#     start_date: str = START_DATE,
-#     end_date: str = END_DATE
-# ):
-#     parsed_positions = [Position(**pos) for pos in positions]
-#     return get_fx_rates(parsed_positions, start_date, end_date, target_currency)
-
-# @app.get("/test-prices")
-# def test_api(positions: List[Position] = Depends(load_positions),
-#     target_currency: str = TARGET_CURRENCY,
-#     start_date: str = START_DATE,
-#     end_date: str = END_DATE
-# ):
-#     parsed_positions = [Position(**pos) for pos in positions]
-#     return get_prices(parsed_positions, start_date, end_date)
-
 # Calculate endpoint
 @app.post("/calculate")
 async def calculate(
@@ -70,15 +52,7 @@ async def calculate(
     prices = get_prices(parsed_positions, start_date, end_date)
     
     # Calculate metrics
-    metrics = calculate_metrics(parsed_positions, fx_rates, prices, start_date, end_date, target_currency)
-
-    # # Round the metrics for positions and basket
-    # def round_metrics(data):
-    #     if isinstance(data, list):  
-    #         return [round(value, 8) if isinstance(value, (int, float)) else value for value in data]
-    #     elif isinstance(data, dict):  
-    #         return {key: round_metrics(value) for key, value in data.items()}
-    #     return data  
+    metrics = calculate_metrics(parsed_positions, fx_rates, prices, start_date, end_date, target_currency) 
 
     # Submit metrics to the API
 
@@ -89,6 +63,17 @@ async def calculate(
     }
     try:
         submission_response = submit_metrics(submission_data)
+
+        # Save the API response to a JSON file
+        response_file_path = "submission_response.json"
+        with open(response_file_path, "w") as file:
+            json.dump(submission_response, file, indent=4)
+
+        # Save the API request to a JSON file
+        request_file_path = "submission_request.json"
+        with open(request_file_path, "w") as file:
+            json.dump(submission_data, file, indent=4)
+
         return {"status": "success", "submission_response": submission_response, "request_body": submission_data}
     except requests.exceptions.RequestException as e:
         return {"status": "error", "message": str(e)}
