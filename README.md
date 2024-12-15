@@ -1,6 +1,6 @@
 # Performativ Tech Challenge Calculator
 
-This repository implements a solution for the Performativ technical challenge. It calculates various financial metrics such as `isOpen`, `Price`, `Value`, `ReturnPerPeriod (RPP)`, and `ReturnPerPeriodPercentage (RPPP)` for positions and their corresponding basket metrics, adhering to the challenge's requirements.
+This repository implements a solution for the Performativ technical challenge. It calculates various financial metrics such as `isOpen`, `Price`, `Value`, `ReturnPerPeriod (RPP)`, and `ReturnPerPeriodPercentage (RPPP)` for positions and their corresponding basket metrics.
 
 ## Project Structure
 
@@ -26,7 +26,7 @@ Key functions:
 * `calculate_ReturnPerPeriodPercentage`: Computes the percentage return per period for positions and the basket.
 
 ### 3. `utils.py`
-Contains utility functions for GET requests to API endpoints. Essentiall gets FX-rates and Prices.
+Contains utility functions for GET requests to API endpoints. Essentially gets FX-rates and Prices.
 
 Key functions:
 * `get_fx_rates`: Fetches foreign exchange rates for converting prices.
