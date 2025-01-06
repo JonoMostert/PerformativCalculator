@@ -19,7 +19,8 @@ def load_positions():
     with file_path.open() as f:
         return json.load(f)
 
-# Define the Position model
+# Define the Position model (I will use this to map the dictionary keys of the positions to the models parameters)
+# Pydantic was used to insure all data types conform to what is expected. It is easy to work with in code (dot indexing)
 class Position(BaseModel):
     id: int
     open_date: str
@@ -39,13 +40,13 @@ app = FastAPI()
 # Calculate endpoint
 @app.post("/calculate")
 async def calculate(
-    positions: List[Position] = Depends(load_positions),
+    positions: List[Position] = Depends(load_positions), # will trigger load_positions on endpoint call. Output is list of dictionaries
     target_currency: str = TARGET_CURRENCY,
     start_date: str = START_DATE,
     end_date: str = END_DATE
 ):
     # Parse positions to the Pydantic model
-    parsed_positions = [Position(**pos) for pos in positions]
+    parsed_positions = [Position(**pos) for pos in positions] # iterate through dictionaries and unpack dictionaries into Position objects
 
     # Fetch required data
     fx_rates = get_fx_rates(parsed_positions, start_date, end_date, target_currency)

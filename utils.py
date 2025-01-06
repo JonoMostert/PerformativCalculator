@@ -9,7 +9,7 @@ def get_fx_rates(positions, start_date, end_date, target_currency):
     start_date = start_date.replace("-", "")
     end_date = end_date.replace("-", "")
 
-    local_currencies = {pos.instrument_currency for pos in positions if pos.instrument_currency != target_currency}
+    local_currencies = {pos.instrument_currency for pos in positions if pos.instrument_currency != target_currency} #create set to not duplicate currency pairs
     pairs = ",".join([f"{lc}{target_currency}" for lc in local_currencies])
     
     url = f"{BASE_URL}/fx-rates"
